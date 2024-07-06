@@ -30,12 +30,29 @@ def recommend_crop(data):
     potassium = data["potassium"]
     temperature = data["temperature"]
     humidity = data["humidity"]
-
-    # Lógica simple para recomendaciones de cultivos
-    if phosphorus > 20 and potassium > 15 and 20 <= temperature <= 30 and humidity > 50:
-        return "Recomendamos sembrar naranjas."
+    
+    # Definición de los requisitos de cada cultivo
+    cultivos = {
+        "naranjas": {"phosphorus_min": 20, "potassium_min": 15, "temp_min": 20, "temp_max": 30, "humidity_min": 50},
+        "uvas": {"phosphorus_min": 25, "potassium_min": 20, "temp_min": 15, "temp_max": 25, "humidity_min": 40},
+        "plátanos": {"phosphorus_min": 30, "potassium_min": 25, "temp_min": 25, "temp_max": 35, "humidity_min": 60},
+        "maíz": {"phosphorus_min": 20, "potassium_min": 20, "temp_min": 18, "temp_max": 30, "humidity_min": 50},
+        "trigo": {"phosphorus_min": 15, "potassium_min": 10, "temp_min": 10, "temp_max": 25, "humidity_min": 40}
+    }
+    
+    # Evaluación de las condiciones del suelo para cada cultivo
+    recomendaciones = []
+    for cultivo, requisitos in cultivos.items():
+        if (phosphorus >= requisitos["phosphorus_min"] and
+            potassium >= requisitos["potassium_min"] and
+            requisitos["temp_min"] <= temperature <= requisitos["temp_max"] and
+            humidity >= requisitos["humidity_min"]):
+            recomendaciones.append(cultivo)
+    
+    if recomendaciones:
+        return f"Recomendamos sembrar: {', '.join(recomendaciones)}."
     else:
-        return "Las condiciones del suelo no son adecuadas para el cultivo de naranjas. Por favor, consulte las recomendaciones específicas."
+        return "Las condiciones del suelo no son adecuadas para los cultivos disponibles. Por favor, consulte las recomendaciones específicas."
 
 # Interfaz de usuario con Streamlit
 st.title("Guardian_Soil: Recomendador de Cultivos")
