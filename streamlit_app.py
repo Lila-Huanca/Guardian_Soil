@@ -4,7 +4,6 @@ import pandas as pd
 import random
 
 UBIDOTS_URL = "https://stem.ubidots.com/app/dashboards/public/dashboard/DSqu9x3MSr7Z_MTANddWfZWKBbaYMdlDv_tVhA3NkE0"
-CULTIVOS_DOC_URL = "https://docs.google.com/document/d/1VCnEJqoRa-Da7MbDzPzBmKkkyGTqtzIW/export?format=txt"
 
 def get_ubidots_data():
     response = requests.get(UBIDOTS_URL)
@@ -36,18 +35,18 @@ def recommend_crop(data, user_input):
             potassium >= requisitos["potassium_min"] and
             requisitos["temp_min"] <= temperature <= requisitos["temp_max"] and
             humidity >= requisitos["humidity_min"]):
-            recomendaciones.append(cultivo)
+            recomendaciones.append(cultivo.capitalize())
     
-    if user_input in recomendaciones:
-        return f"Recomendamos sembrar: {user_input}."
+    if user_input.capitalize() in recomendaciones:
+        return f"Recomendamos sembrar: {user_input.capitalize()}."
     else:
-        alternative_crops = [crop for crop in recomendaciones if crop != user_input]
+        alternative_crops = [crop for crop in recomendaciones if crop != user_input.capitalize()]
         random.shuffle(alternative_crops)
         alternative_crops = ', '.join(alternative_crops[:5])
         responses = [
-            f"No puedes sembrar ahora {user_input} pero podrías sembrar: {alternative_crops}. No te preocupes, que estamos aquí para orientarte y que puedas tener un mejor cultivo.",
-            f"No puedes sembrar ahora {user_input} pero podrías sembrar: {alternative_crops}. No te preocupes que estamos aquí para ayudarte.",
-            f"No puedes sembrar ahora {user_input} pero podrías sembrar: {alternative_crops}. No te preocupes que estamos aquí para apoyarte y que podamos escoger la mejor cosecha de este año y todos los años que falten."
+            f"No puedes sembrar ahora {user_input.capitalize()} pero podrías sembrar: {alternative_crops}. No te preocupes, que estamos aquí para orientarte y que puedas tener un mejor cultivo.",
+            f"No puedes sembrar ahora {user_input.capitalize()} pero podrías sembrar: {alternative_crops}. No te preocupes que estamos aquí para ayudarte.",
+            f"No puedes sembrar ahora {user_input.capitalize()} pero podrías sembrar: {alternative_crops}. No te preocupes que estamos aquí para apoyarte y que podamos escoger la mejor cosecha de este año y todos los años que falten."
         ]
         return random.choice(responses)
 
@@ -68,7 +67,7 @@ def clear_state():
 st.session_state.user_input = st.text_input("Ingrese el cultivo que desea sembrar (por ejemplo, 'uva'):", st.session_state.user_input)
 
 if st.session_state.user_input:
-    st.write(f"Ha ingresado: {st.session_state.user_input}")
+    st.write(f"Ha ingresado: {st.session_state.user_input.capitalize()}")
     if st.button("Obtener recomendación"):
         st.session_state.soil_data = get_ubidots_data()
         st.write("Datos del suelo obtenidos:")
