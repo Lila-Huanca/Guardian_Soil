@@ -57,23 +57,40 @@ def recommend_crop(data):
 # Interfaz de usuario con Streamlit
 st.title("Guardian_Soil: Recomendador de Cultivos")
 
-# Botón para obtener datos del suelo
-if st.button("Obtener datos del suelo"):
-    soil_data = get_ubidots_data()
-    st.write("Datos del suelo obtenidos:")
-    st.write(soil_data)
+# Inicialización del estado de la sesión
+if "user_input" not in st.session_state:
+    st.session_state.user_input = ""
+if "soil_data" not in st.session_state:
+    st.session_state.soil_data = None
+if "recommendation" not in st.session_state:
+    st.session_state.recommendation = ""
+if "detailed_recommendations" not in st.session_state:
+    st.session_state.detailed_recommendations = ""
 
-    user_input = st.text_input("Ingrese el cultivo que desea sembrar (por ejemplo, 'uva'):")
+def clear_state():
+    st.session_state.user_input = ""
+    st.session_state.soil_data = None
+    st.session_state.recommendation = ""
+    st.session_state.detailed_recommendations = ""
 
-    if user_input:
-        st.write(f"Ha ingresado: {user_input}")
-        
-        recommendation = recommend_crop(soil_data)
+# Entrada del usuario para el cultivo
+st.session_state.user_input = st.text_input("Ingrese el cultivo que desea sembrar (por ejemplo, 'uva'):", st.session_state.user_input)
+
+if st.session_state.user_input:
+    st.write(f"Ha ingresado: {st.session_state.user_input}")
+    if st.button("Obtener recomendación"):
+        st.session_state.soil_data = get_ubidots_data()
+        st.write("Datos del suelo obtenidos:")
+        st.write(st.session_state.soil_data)
+
+        st.session_state.recommendation = recommend_crop(st.session_state.soil_data)
         st.write("Recomendación:")
-        st.write(recommendation)
-        
+        st.write(st.session_state.recommendation)
+
+        st.session_state.detailed_recommendations = get_cultivos_recommendations()
         st.write("Recomendaciones detalladas de cultivos:")
-        recommendations = get_cultivos_recommendations()
-        st.write(recommendations)
-else:
-    st.write("Presiona el botón para obtener los datos del suelo.")
+        st.write(st.session_state.detailed_recommendations)
+
+# Botón para borrar resultados y hacer otra consulta
+if st.button("Borrar resultados y consultar de nuevo"):
+    clear_state()
