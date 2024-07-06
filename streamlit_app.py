@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
+import random
 
 # URL del dashboard de Ubidots
 UBIDOTS_URL = "https://stem.ubidots.com/app/dashboards/public/dashboard/DSqu9x3MSr7Z_MTANddWfZWKBbaYMdlDv_tVhA3NkE0"
@@ -25,7 +26,7 @@ def get_cultivos_recommendations():
     recommendations = response.text
     return recommendations
 
-def recommend_crop(data):
+def recommend_crop(data, user_input):
     phosphorus = data["phosphorus"]
     potassium = data["potassium"]
     temperature = data["temperature"]
@@ -39,6 +40,8 @@ def recommend_crop(data):
         "maíz": {"phosphorus_min": 20, "potassium_min": 20, "temp_min": 18, "temp_max": 30, "humidity_min": 50},
         "trigo": {"phosphorus_min": 15, "potassium_min": 10, "temp_min": 10, "temp_max": 25, "humidity_min": 40}
     }
+
+    alternativas = ["manzana", "lechuga", "betarraga", "espárrago", "zanahoria"]
     
     # Evaluación de las condiciones del suelo para cada cultivo
     recomendaciones = []
@@ -52,7 +55,13 @@ def recommend_crop(data):
     if recomendaciones:
         return f"Recomendamos sembrar: {', '.join(recomendaciones)}."
     else:
-        return "Las condiciones del suelo no son adecuadas para los cultivos disponibles. Por favor, consulte las recomendaciones específicas."
+        mensajes_aliento = [
+            "No puedes sembrar ahora limón, pero podrías sembrar: " + ', '.join(alternativas) + ". No te preocupes, que estamos aquí para orientarte y que puedas tener un mejor cultivo.",
+            "No puedes sembrar ahora limón, pero podrías sembrar: " + ', '.join(alternativas) + ". No te preocupes que estamos aquí para ayudarte.",
+            "No puedes sembrar ahora limón, pero podrías sembrar: " + ', '.join(alternativas) + ". No te preocupes que estamos aquí para apoyarte y que podamos escoger la mejor cosecha de este año y todos los años que falten."
+        ]
+        mensaje = random.choice(mensajes_aliento)
+        return mensaje
 
 # Interfaz de usuario con Streamlit
 st.title("Guardian_Soil: Recomendador de Cultivos")
@@ -83,7 +92,7 @@ if st.session_state.user_input:
         st.write("Datos del suelo obtenidos:")
         st.write(st.session_state.soil_data)
 
-        st.session_state.recommendation = recommend_crop(st.session_state.soil_data)
+        st.session_state.recommendation = recommend_crop(st.session_state.soil_data, st.session_state.user_input)
         st.write("Recomendación:")
         st.write(st.session_state.recommendation)
 
