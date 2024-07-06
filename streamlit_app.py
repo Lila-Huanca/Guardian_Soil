@@ -58,30 +58,6 @@ def recommend_crop(data, user_input):
 # Streamlit App
 st.title("Guardian_Soil: Recomendador de Cultivos")
 
-# Introduction
-st.markdown("""
-# Guardian Soil
-### Monitoreo remoto en tiempo real de la calidad del suelo
-¡BIENVENIDOS A GUARDIAN SOIL!
-
-¡Bienvenidos a todos! Este es la aplicación del grupo 3 del curso de fundamentos de diseño. Por aquí podrán ver y analizar todo el trabajo realizado sobre nuestro equipo. Somos un grupo de estudiantes con las ganas de aportar nuestro granito de arena en el mundo, buscamos desarrollar e implementar soluciones innovadoras y creativas. ¡BIENVENIDOS A GUARDIAN SOIL!
-
-¿Para quienes está dirigida la aplicación? 
-Guardian Soil está especialmente dirigida a la población agrícola de La Oroya, Junín, en la Sierra Central del Perú. No obstante, también puede implementarse en otros lugares con el tiempo.
-""")
-
-# Ubidots Data
-st.markdown(f"### [Monitoreo en tiempo real](https://stem.ubidots.com/app/dashboards/public/dashboard/DSqu9x3MSr7Z_MTANddWfZWKBbaYMdlDv_tVhA3NkE0)")
-st.write("")
-
-# Comparativa Table
-st.markdown(f"### [Tabla Comparativa](https://docs.google.com/document/d/1VCnEJqoRa-Da7MbDzPzBmKkkyGTqtzIW/edit?usp=drive_link&ouid=113185433440571333811&rtpof=true&sd=true)")
-st.write("")
-
-# Pie Chart
-st.markdown(f"### [Gráfico Circular](https://docs.google.com/document/d/1Lb9cVvxqfVCjV_8zK9EclqNE06AopXWlpOAt_ES80Jg/edit?usp=drive_link)")
-st.write("")
-
 # Initialize session state
 if "user_input" not in st.session_state:
     st.session_state.user_input = ""
@@ -114,16 +90,3 @@ if st.session_state.user_input:
 # Clear results
 if st.button("Borrar resultados y consultar de nuevo"):
     clear_state()
-
-# Contact Information
-st.markdown("""
-### Soporte técnico
-Estamos disponible para cualquier duda o consulta, no dudes en mandarnos un mensaje.
-
-Correo electrónico:                                        
-- lila.huanca@upch.pe
-- brenda.sanchez@upch.pe
-- bertil.rodriguez@upch.pe 
-- anjhy.zamora@upch.pe 
-- maycol.condor@upch.pe 
-""")
