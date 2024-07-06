@@ -3,8 +3,10 @@ import requests
 import pandas as pd
 import random
 
+# Constants
 UBIDOTS_URL = "https://stem.ubidots.com/app/dashboards/public/dashboard/DSqu9x3MSr7Z_MTANddWfZWKBbaYMdlDv_tVhA3NkE0"
 
+# Function to fetch data from Ubidots
 def get_ubidots_data():
     response = requests.get(UBIDOTS_URL)
     data = {
@@ -15,12 +17,14 @@ def get_ubidots_data():
     }
     return data
 
+# Function to recommend crops based on soil data
 def recommend_crop(data, user_input):
     phosphorus = data["phosphorus"]
     potassium = data["potassium"]
     temperature = data["temperature"]
     humidity = data["humidity"]
     
+    # Crop requirements
     cultivos = {
         "naranjas": {"phosphorus_min": 20, "potassium_min": 15, "temp_min": 20, "temp_max": 30, "humidity_min": 50},
         "uvas": {"phosphorus_min": 25, "potassium_min": 20, "temp_min": 15, "temp_max": 25, "humidity_min": 40},
@@ -29,6 +33,7 @@ def recommend_crop(data, user_input):
         "trigo": {"phosphorus_min": 15, "potassium_min": 10, "temp_min": 10, "temp_max": 25, "humidity_min": 40}
     }
     
+    # Recommendations based on the soil data
     recomendaciones = []
     for cultivo, requisitos in cultivos.items():
         if (phosphorus >= requisitos["phosphorus_min"] and
@@ -38,7 +43,7 @@ def recommend_crop(data, user_input):
             recomendaciones.append(cultivo.capitalize())
     
     if user_input.capitalize() in recomendaciones:
-        return f"Recomendamos sembrar: {user_input.capitalize()}."
+        return f"Recomendamos sembrar: {user_input.capitalize()}. Puedes sembrar {user_input.capitalize()} porque cuentas con los estándares aptos para esta siembra. ¡Buena suerte! Este es tu año."
     else:
         alternative_crops = [crop for crop in recomendaciones if crop != user_input.capitalize()]
         random.shuffle(alternative_crops)
@@ -50,8 +55,10 @@ def recommend_crop(data, user_input):
         ]
         return random.choice(responses)
 
+# Streamlit App
 st.title("Guardian_Soil: Recomendador de Cultivos")
 
+# Initialize session state
 if "user_input" not in st.session_state:
     st.session_state.user_input = ""
 if "soil_data" not in st.session_state:
@@ -59,13 +66,16 @@ if "soil_data" not in st.session_state:
 if "recommendation" not in st.session_state:
     st.session_state.recommendation = ""
 
+# Clear session state
 def clear_state():
     st.session_state.user_input = ""
     st.session_state.soil_data = None
     st.session_state.recommendation = ""
 
+# User input
 st.session_state.user_input = st.text_input("Ingrese el cultivo que desea sembrar (por ejemplo, 'uva'):", st.session_state.user_input)
 
+# Process input
 if st.session_state.user_input:
     st.write(f"Ha ingresado: {st.session_state.user_input.capitalize()}")
     if st.button("Obtener recomendación"):
@@ -77,5 +87,6 @@ if st.session_state.user_input:
         st.write("Recomendación:")
         st.write(st.session_state.recommendation)
 
+# Clear results
 if st.button("Borrar resultados y consultar de nuevo"):
     clear_state()
