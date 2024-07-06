@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import pandas as pd
 import random
 
 # URL del dashboard de Ubidots
@@ -20,11 +19,6 @@ def get_ubidots_data():
         "humidity": 60
     }
     return data
-
-def get_cultivos_recommendations():
-    response = requests.get(CULTIVOS_DOC_URL)
-    recommendations = response.text
-    return recommendations
 
 def recommend_crop(data, user_input):
     phosphorus = data["phosphorus"]
@@ -73,14 +67,11 @@ if "soil_data" not in st.session_state:
     st.session_state.soil_data = None
 if "recommendation" not in st.session_state:
     st.session_state.recommendation = ""
-if "detailed_recommendations" not in st.session_state:
-    st.session_state.detailed_recommendations = ""
 
 def clear_state():
     st.session_state.user_input = ""
     st.session_state.soil_data = None
     st.session_state.recommendation = ""
-    st.session_state.detailed_recommendations = ""
 
 # Entrada del usuario para el cultivo
 st.session_state.user_input = st.text_input("Ingrese el cultivo que desea sembrar (por ejemplo, 'uva'):", st.session_state.user_input)
@@ -95,10 +86,6 @@ if st.session_state.user_input:
         st.session_state.recommendation = recommend_crop(st.session_state.soil_data, st.session_state.user_input)
         st.write("Recomendación:")
         st.write(st.session_state.recommendation)
-
-        st.session_state.detailed_recommendations = get_cultivos_recommendations()
-        st.write("Recomendaciones detalladas de cultivos:")
-        st.write(st.session_state.detailed_recommendations)
 
 # Botón para borrar resultados y hacer otra consulta
 if st.button("Borrar resultados y consultar de nuevo"):
