@@ -57,18 +57,23 @@ def recommend_crop(data):
 # Interfaz de usuario con Streamlit
 st.title("Guardian_Soil: Recomendador de Cultivos")
 
-user_input = st.text_input("Ingrese el cultivo que desea sembrar (por ejemplo, 'uva'):")
-
-if user_input:
-    st.write(f"Ha ingresado: {user_input}")
+# Botón para obtener datos del suelo
+if st.button("Obtener datos del suelo"):
     soil_data = get_ubidots_data()
     st.write("Datos del suelo obtenidos:")
     st.write(soil_data)
-    
-    recommendation = recommend_crop(soil_data)
-    st.write("Recomendación:")
-    st.write(recommendation)
-    
-    st.write("Recomendaciones detalladas de cultivos:")
-    recommendations = get_cultivos_recommendations()
-    st.write(recommendations)
+
+    user_input = st.text_input("Ingrese el cultivo que desea sembrar (por ejemplo, 'uva'):")
+
+    if user_input:
+        st.write(f"Ha ingresado: {user_input}")
+        
+        recommendation = recommend_crop(soil_data)
+        st.write("Recomendación:")
+        st.write(recommendation)
+        
+        st.write("Recomendaciones detalladas de cultivos:")
+        recommendations = get_cultivos_recommendations()
+        st.write(recommendations)
+else:
+    st.write("Presiona el botón para obtener los datos del suelo.")
