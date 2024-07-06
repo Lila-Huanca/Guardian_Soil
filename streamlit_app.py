@@ -1,75 +1,57 @@
 import streamlit as st
 import requests
+import pandas as pd
 
-# Datos de estándares agronómicos
-cultivos = {
-    "palta": {"npk_min": 5, "npk_max": 15, "temp_min": 16, "temp_max": 25, "hum_min": 60, "hum_max": 80},
-    "tomate": {"npk_min": 4, "npk_max": 10, "temp_min": 20, "temp_max": 30, "hum_min": 40, "hum_max": 60},
-    # Añadir más cultivos según sea necesario
-}
+# URL del dashboard de Ubidots
+UBIDOTS_URL = "https://stem.ubidots.com/app/dashboards/public/dashboard/DSqu9x3MSr7Z_MTANddWfZWKBbaYMdlDv_tVhA3NkE0"
+# URL del documento de Google con las recomendaciones de cultivos
+CULTIVOS_DOC_URL = "https://docs.google.com/document/d/1VCnEJqoRa-Da7MbDzPzBmKkkyGTqtzIW/export?format=txt"
 
-# Función para evaluar datos del usuario
-def evaluar_cultivo(cultivo, npk, temp, humedad):
-    if cultivo not in cultivos:
-        return f"Lo siento, no tengo información sobre {cultivo}."
-    
-    datos_cultivo = cultivos[cultivo]
-    
-    if not (datos_cultivo["npk_min"] <= npk <= datos_cultivo["npk_max"]):
-        return f"No puedes plantar {cultivo} porque el NPK está fuera del rango permitido."
-    if not (datos_cultivo["temp_min"] <= temp <= datos_cultivo["temp_max"]):
-        return f"No puedes plantar {cultivo} porque la temperatura está fuera del rango permitido."
-    if not (datos_cultivo["hum_min"] <= humedad <= datos_cultivo["hum_max"]):
-        return f"No puedes plantar {cultivo} porque la humedad está fuera del rango permitido."
-    
-    return f"Puedes plantar {cultivo}."
+def get_ubidots_data():
+    # Aquí deberías hacer la petición a la API de Ubidots para obtener los datos del suelo
+    # Por simplicidad, se asume que ya tienes los datos en un formato legible
+    response = requests.get(UBIDOTS_URL)
+    # Simulación de datos obtenidos
+    data = {
+        "phosphorus": 30,
+        "potassium": 20,
+        "temperature": 25,
+        "humidity": 60
+    }
+    return data
 
-# Función para sugerir un cultivo alternativo
-def sugerir_cultivo(npk, temp, humedad):
-    for cultivo, datos_cultivo in cultivos.items():
-        if (datos_cultivo["npk_min"] <= npk <= datos_cultivo["npk_max"] and
-            datos_cultivo["temp_min"] <= temp <= datos_cultivo["temp_max"] and
-            datos_cultivo["hum_min"] <= humedad <= datos_cultivo["hum_max"]):
-            return f"Puedes plantar {cultivo}."
-    return "Lo siento, no encuentro un cultivo adecuado para las condiciones dadas."
+def get_cultivos_recommendations():
+    response = requests.get(CULTIVOS_DOC_URL)
+    recommendations = response.text
+    return recommendations
 
-# Función para obtener datos de Ubidots
-def obtener_datos_ubidots(token, device, variable):
-    url = f"https://industrial.api.ubidots.com/api/v1.6/devices/{device}/{variable}/lv"
-    headers = {"X-Auth-Token": token}
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
+def recommend_crop(data):
+    phosphorus = data["phosphorus"]
+    potassium = data["potassium"]
+    temperature = data["temperature"]
+    humidity = data["humidity"]
+
+    # Lógica simple para recomendaciones de cultivos
+    if phosphorus > 20 and potassium > 15 and 20 <= temperature <= 30 and humidity > 50:
+        return "Recomendamos sembrar naranjas."
     else:
-        st.error(f"Error al obtener datos de Ubidots: {response.status_code}")
-        return None
+        return "Las condiciones del suelo no son adecuadas para el cultivo de naranjas. Por favor, consulte las recomendaciones específicas."
 
-# Configuración de la interfaz de usuario con Streamlit
-st.title("Asistente de Plantación de Cultivos")
+# Interfaz de usuario con Streamlit
+st.title("Guardian_Soil: Recomendador de Cultivos")
 
-# Token y device de Ubidots
-ubidots_token = st.text_input("Ingresa tu token de Ubidots:")
-device = st.text_input("Ingresa el nombre del dispositivo:")
+user_input = st.text_input("Ingrese el cultivo que desea sembrar (por ejemplo, 'uva'):")
 
-if st.button("Obtener Datos y Evaluar"):
-    if ubidots_token and device:
-        npk_usuario = obtener_datos_ubidots(ubidots_token, device, "npk")
-        temp_usuario = obtener_datos_ubidots(ubidots_token, device, "temperature")
-        hum_usuario = obtener_datos_ubidots(ubidots_token, device, "humidity")
-        
-        if npk_usuario is not None and temp_usuario is not None and hum_usuario is not None:
-            st.write(f"NPK: {npk_usuario}")
-            st.write(f"Temperatura: {temp_usuario}°C")
-            st.write(f"Humedad: {hum_usuario}%")
-            
-            cultivo_deseado = st.selectbox("Selecciona el cultivo deseado:", list(cultivos.keys()))
-            resultado = evaluar_cultivo(cultivo_deseado, npk_usuario, temp_usuario, hum_usuario)
-            st.write(resultado)
-
-            if "No puedes" in resultado:
-                sugerencia = sugerir_cultivo(npk_usuario, temp_usuario, hum_usuario)
-                st.write(sugerencia)
-        else:
-            st.error("No se pudieron obtener todos los datos necesarios de Ubidots.")
-    else:
-        st.error("Por favor, ingresa el token y el nombre del dispositivo de Ubidots.")
+if user_input:
+    st.write(f"Ha ingresado: {user_input}")
+    soil_data = get_ubidots_data()
+    st.write("Datos del suelo obtenidos:")
+    st.write(soil_data)
+    
+    recommendation = recommend_crop(soil_data)
+    st.write("Recomendación:")
+    st.write(recommendation)
+    
+    st.write("Recomendaciones detalladas de cultivos:")
+    recommendations = get_cultivos_recommendations()
+    st.write(recommendations)
