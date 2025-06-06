@@ -1,144 +1,105 @@
 import streamlit as st
+import py3Dmol
+# from st_pages import Page, show_pages # Para mejor organización de páginas, opcional
+import pandas as pd # Para mostrar métricas
 
-class Producto:
-    def __init__(self, nombre, categoria, precio, variacion=None):
-        self.nombre = nombre
-        self.categoria = categoria
-        self.precio = precio
-        self.variacion = variacion if variacion else {}
+# --- Configuración de la Página (Opcional) ---
+st.set_page_config(layout="wide")
 
-    def __str__(self):
-        return f"{self.nombre} ({self.categoria}) - Precio: {self.precio}€"
+# Registra páginas si quieres una aplicación de varias páginas
+# show_pages(
+#     [
+#         Page("app.py", "Plegamiento de DNA", "🧬"),
+#         # Agrega más páginas aquí si es necesario
+#     ]
+# )
 
+st.title("🧬 Visualización 3D del Plegamiento de DNA")
 
-class Carrito:
-    def __init__(self):
-        self.productos = {}
+# --- Secuencia de ADN y Métricas (de tu imagen) ---
+dna_sequence = "AACTGCTATCTAACGCCAGC"
+st.subheader("Secuencia de ADN:")
+st.code(dna_sequence)
 
-    def agregar_producto(self, producto, cantidad):
-        if producto.nombre in self.productos:
-            self.productos[producto.nombre]["cantidad"] += cantidad
-        else:
-            self.productos[producto.nombre] = {"producto": producto, "cantidad": cantidad}
+st.subheader("Métricas de Simulación (MD = 10ns):")
+# En un escenario real, estos valores provendrían de tu análisis MD
+md_metrics = {
+    "RMSD": "X Å", # Reemplaza X con el valor calculado real
+    "Radio de giro": "Y Å", # Reemplaza Y con el valor calculado real
+    "Energía Potencial": "Z kcal/mol", # Reemplaza Z con el valor calculado real
+    "Densidad": "W g/cm³" # Reemplaza W con el valor calculado real
+}
+st.write("Estas métricas se obtendrían del análisis de su simulación de dinámica molecular.")
+st.json(md_metrics) # Muestra como JSON por ahora, o una tabla formateada
 
-    def mostrar_carrito(self):
-        if not self.productos:
-            st.warning("El carrito está vacío.")
-        else:
-            st.subheader("Productos en el carrito:")
-            for nombre, datos in self.productos.items():
-                producto = datos["producto"]
-                cantidad = datos["cantidad"]
-                st.write(f"- {producto.nombre}: {cantidad} unidades, Total: {producto.precio * cantidad:.2f}€")
+# --- Visualización 3D ---
+st.subheader("Visualización 3D Interactiva:")
 
-    def calcular_total(self):
-        return sum(datos["producto"].precio * datos["cantidad"] for datos in self.productos.values())
+# Aquí es donde cargarías tus datos PDB o de trayectoria
+# Para demostración, asumimos que tenemos un archivo PDB simple.
+# En un escenario MD real, cargarías la trayectoria completa.
 
+# Ejemplo: Si tienes un archivo PDB llamado 'dna_structure.pdb'
+# Necesitarías crear u obtener este archivo.
+# Para una prueba rápida, puedes usar un marcador de posición o descargar 1BNA del RCSB PDB
+try:
+    with open("dna_structure.pdb", "r") as f:
+        pdb_data = f.read()
+except FileNotFoundError:
+    st.warning("`dna_structure.pdb` no encontrado. Por favor, asegúrese de tener un archivo PDB en el mismo directorio o genere uno.")
+    st.info("Para una prueba rápida, intente descargar el PDB 1BNA (B-DNA) de RCSB PDB y guárdelo como `dna_structure.pdb`.")
+    pdb_data = None # No hay datos PDB para visualizar
 
-class Promo:
-    @staticmethod
-    def aplicar_descuento(carrito, porcentaje_descuento):
-        total = carrito.calcular_total()
-        descuento = 0
-        if len(carrito.productos) > 3:
-            descuento = total * (porcentaje_descuento / 100)
-            total -= descuento
-            st.success(f"Descuento aplicado: {descuento:.2f}€")
-        return total
+if pdb_data:
+    st.markdown("---")
+    st.markdown("### Estructura 3D (estática)")
 
+    # Crea un visor 3Dmol
+    view = py3Dmol.view(width=800, height=500)
+    view.addModel(pdb_data, 'pdb')
 
-class Envio:
-    def __init__(self):
-        self.igv = 0.05
+    # Aplica estilos (ej., cartoon, spheres, sticks)
+    view.setStyle({'stick':{}}) # O {'cartoon':{'color':'spectrum'}} para proteínas, {'sphere':{}}
+    # Puedes colorear por tipo de átomo, o una cadena específica si tu PDB la tiene
+    # Para ADN, 'stick' o 'sphere' suelen funcionar bien.
 
-    def calcular_costo_envio(self, total, metodo_envio):
-        if metodo_envio == "domicilio":
-            total += total * self.igv
-            st.info(f"Se ha añadido un IGV del 5%. Total final: {total:.2f}€")
-        else:
-            st.info("Has elegido recoger en tienda. No se aplican cargos adicionales.")
-        return total
+    # Establece la vista inicial
+    view.zoomTo()
 
+    # Renderiza el visor en Streamlit
+    # El argumento 'make_interactive' permite rotación, zoom, etc.
+    st_3dmol = st.empty() # Marcador de posición para el visor 3Dmol
+    with st_3dmol:
+        view.show()
+    
+    st.info("Puede rotar, hacer zoom y mover la estructura 3D.")
 
-def seleccionar_producto():
-    opciones = {
-        "alimentos": {
-            "Manzana": 1,
-            "Pera": 1.5,
-            "Papaya": 2
-        },
-        "ropa": {
-            "Polos": 20,
-            "Shorts": 15,
-            "Pantalones": 25
-        },
-        "tecnologia": {
-            "Teléfono": {"Samsung": 600, "Apple": 1200, "Huawei": 400},
-            "Refrigeradora": 1200,
-            "Computadora": 800
-        }
-    }
+    st.markdown("---")
+    st.markdown("### Visualización de Dinámica Molecular (Concepto)")
+    st.write("""
+    Para visualizar una trayectoria de 10ns MD:
 
-    categoria = st.selectbox("Seleccione la categoría del producto:", ["alimentos", "ropa", "tecnologia"])
+    1.  **Cargue su archivo de trayectoria** (ej., .dcd, .xtc) y el PDB inicial.
+    2.  Use librerías como `MDAnalysis` para leer la trayectoria.
+    3.  Itere a través de los fotogramas de la trayectoria.
+    4.  Actualice la visualización de `py3Dmol` para cada fotograma o genere una animación.
+    """)
 
-    if categoria:
-        producto_elegido = st.selectbox(f"¿Qué {categoria} desea comprar?", opciones[categoria].keys())
+    # Para mostrar dinámica, típicamente iterarías sobre los frames y actualizarías la vista
+    # Esto es más complejo y requeriría MDAnalysis.
+    # Para una demostración simple, podrías cargar múltiples PDBs para diferentes puntos de tiempo
+    # y usar un slider para cambiar entre ellos.
 
-        if producto_elegido:
-            if categoria == "ropa":
-                talla = st.selectbox("¿Qué talla desea?", ["S", "M", "L", "XL"])
-                precio_base = opciones[categoria][producto_elegido]
-                precio_talla = {"S": 0, "M": 2, "L": 4, "XL": 6}
-                precio_final = precio_base + precio_talla.get(talla, 0)
-                return Producto(f"{producto_elegido} talla {talla.upper()}", categoria, precio_final)
+    # Ejemplo de un marcador de posición para la visualización de trayectoria MD
+    # if st.button("Simular Animación (Requiere Datos MD)"):
+    #     st.write("Cargando y animando trayectoria...")
+    #     # Marcador de posición para el análisis MD y la lógica de animación
+    #     # Esto implicaría MDAnalysis para leer la trayectoria, y luego actualizar py3Dmol
+    #     # O generar un GIF/MP4 a partir de los frames y mostrarlo.
+    #     st.warning("Funcionalidad de animación no implementada en este ejemplo. Requiere datos de simulación y lógica de procesamiento.")
 
-            elif categoria == "tecnologia" and producto_elegido == "Teléfono":
-                marca = st.selectbox("¿Qué marca prefiere?", ["Samsung", "Apple", "Huawei"])
-                if marca:
-                    precio = opciones[categoria][producto_elegido][marca]
-                    return Producto(f"Teléfono {marca}", categoria, precio)
+else:
+    st.error("No se pudo cargar la estructura 3D. Por favor, proporcione un archivo PDB.")
 
-            else:
-                return Producto(producto_elegido, categoria, opciones[categoria][producto_elegido])
-
-    return None
-
-
-def main():
-    st.title("Tienda en Línea")
-    st.subheader("¡Bienvenido a nuestra tienda en línea!")
-
-    cliente_nombre = st.text_input("Ingrese su nombre:")
-    if cliente_nombre:
-        st.success(f"¡Hola, {cliente_nombre}!")
-
-        carrito = Carrito()
-
-        while True:
-            st.subheader("Seleccione los productos:")
-            producto_seleccionado = seleccionar_producto()
-            if producto_seleccionado:
-                cantidad = st.number_input(f"¿Cuántas unidades de {producto_seleccionado.nombre} desea agregar?", min_value=1, step=1)
-                if st.button(f"Agregar {producto_seleccionado.nombre} al carrito"):
-                    carrito.agregar_producto(producto_seleccionado, cantidad)
-
-            if st.button("Finalizar compra"):
-                break
-
-        carrito.mostrar_carrito()
-
-        if len(carrito.productos) > 0:
-            promo = Promo()
-            total_con_descuento = promo.aplicar_descuento(carrito, 10)
-
-            envio = Envio()
-            metodo_envio = st.selectbox("Seleccione el método de envío:", ["tienda", "domicilio"])
-            total_final = envio.calcular_costo_envio(total_con_descuento, metodo_envio)
-
-            metodo_pago = st.selectbox("Seleccione el método de pago:", ["Tarjeta", "Paypal", "Efectivo"])
-            if st.button("Confirmar compra"):
-                st.success(f"Gracias por su compra, {cliente_nombre}. Ha elegido pagar con {metodo_pago}. Total: {total_final:.2f}€.")
-
-
-if __name__ == "__main__":
-    main()
+st.markdown("---")
+st.write("Desarrollado con Streamlit y py3Dmol.")
